@@ -14,13 +14,186 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      plans: {
+        Row: {
+          article_limit: number | null
+          created_at: string
+          credits_per_day: number
+          features: Json | null
+          id: string
+          name: string
+          pdf_limit: number | null
+          price_monthly: number | null
+          price_yearly: number | null
+          trial_days: number | null
+          video_limit: number | null
+        }
+        Insert: {
+          article_limit?: number | null
+          created_at?: string
+          credits_per_day?: number
+          features?: Json | null
+          id?: string
+          name: string
+          pdf_limit?: number | null
+          price_monthly?: number | null
+          price_yearly?: number | null
+          trial_days?: number | null
+          video_limit?: number | null
+        }
+        Update: {
+          article_limit?: number | null
+          created_at?: string
+          credits_per_day?: number
+          features?: Json | null
+          id?: string
+          name?: string
+          pdf_limit?: number | null
+          price_monthly?: number | null
+          price_yearly?: number | null
+          trial_days?: number | null
+          video_limit?: number | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          affiliate_code: string | null
+          created_at: string
+          credits_available: number
+          credits_reset_at: string
+          full_name: string | null
+          id: string
+          plan_id: string | null
+          preferred_language: string | null
+          streak_days: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          affiliate_code?: string | null
+          created_at?: string
+          credits_available?: number
+          credits_reset_at?: string
+          full_name?: string | null
+          id?: string
+          plan_id?: string | null
+          preferred_language?: string | null
+          streak_days?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          affiliate_code?: string | null
+          created_at?: string
+          credits_available?: number
+          credits_reset_at?: string
+          full_name?: string | null
+          id?: string
+          plan_id?: string | null
+          preferred_language?: string | null
+          streak_days?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      summaries: {
+        Row: {
+          audio_url: string | null
+          content_type: string
+          created_at: string
+          id: string
+          original_link: string | null
+          summary_format: string
+          summary_text: string | null
+          tags: string[] | null
+          title: string | null
+          tokens_used: number | null
+          user_id: string
+        }
+        Insert: {
+          audio_url?: string | null
+          content_type: string
+          created_at?: string
+          id?: string
+          original_link?: string | null
+          summary_format: string
+          summary_text?: string | null
+          tags?: string[] | null
+          title?: string | null
+          tokens_used?: number | null
+          user_id: string
+        }
+        Update: {
+          audio_url?: string | null
+          content_type?: string
+          created_at?: string
+          id?: string
+          original_link?: string | null
+          summary_format?: string
+          summary_text?: string | null
+          tags?: string[] | null
+          title?: string | null
+          tokens_used?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "summaries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usage_logs: {
+        Row: {
+          content_type: string
+          created_at: string
+          id: string
+          tokens_used: number | null
+          user_id: string
+        }
+        Insert: {
+          content_type: string
+          created_at?: string
+          id?: string
+          tokens_used?: number | null
+          user_id: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          id?: string
+          tokens_used?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      owns_summary: { Args: { _summary_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
