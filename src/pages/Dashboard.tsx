@@ -1,107 +1,54 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Zap, Plus, Library, Settings, LogOut, Copy, Download,
-  FileText, Youtube, Globe, Sparkles, BarChart3, Clock, Flame,
+  Zap, Plus, Library, Settings, LogOut,
+  Sparkles, BarChart3, Flame,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-
-const summaryFormats = [
-  "Quick Summary",
-  "Detailed Summary",
-  "Bullet Points",
-  "Study Mode",
-  "Mindmap Style",
-  "Twitter Thread",
-];
-
-const typeIcon: Record<string, any> = { video: Youtube, article: Globe, pdf: FileText };
-
-function detectContentType(url: string): string {
-  if (/youtube\.com|youtu\.be/i.test(url)) return "video";
-  if (/\.pdf$/i.test(url)) return "pdf";
-  return "article";
-}
+import GenerateTab from "@/components/dashboard/GenerateTab";
+import LibraryTab from "@/components/dashboard/LibraryTab";
 
 export default function Dashboard() {
   const { profile, signOut, user } = useAuth();
-  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("generate");
-  const [contentUrl, setContentUrl] = useState("");
-  const [format, setFormat] = useState("Quick Summary");
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedSummary, setGeneratedSummary] = useState("");
-  const [summaries, setSummaries] = useState<any[]>([]);
-  const [loadingLibrary, setLoadingLibrary] = useState(false);
+  const [liveCredits, setLiveCredits] = useState<number | null>(null);
 
-  const credits = profile?.credits_available ?? 0;
+  const credits = liveCredits ?? profile?.credits_available ?? 0;
   const maxCredits = profile?.plans?.credits_per_day ?? 3;
   const userName = profile?.full_name || "User";
 
-  const fetchSummaries = useCallback(async () => {
-    if (!profile) return;
-    setLoadingLibrary(true);
-    const { data } = await supabase
-      .from("summaries")
-      .select("*")
-      .eq("user_id", profile.id)
-      .order("created_at", { ascending: false })
-      .limit(50);
-    setSummaries(data || []);
-    setLoadingLibrary(false);
-  }, [profile]);
-
+  // Realtime credit updates
   useEffect(() => {
-    if (activeTab === "library") fetchSummaries();
-  }, [activeTab, fetchSummaries]);
+    if (!profile?.id) return;
 
-  const handleGenerate = async () => {
-    if (!contentUrl) return;
-    setIsGenerating(true);
-    setGeneratedSummary("");
-
-    try {
-      const { data, error } = await supabase.functions.invoke("generate-summary", {
-        body: {
-          url: contentUrl,
-          format,
-          content_type: detectContentType(contentUrl),
+    const channel = supabase
+      .channel("profile-credits")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "profiles",
+          filter: `id=eq.${profile.id}`,
         },
-      });
+        (payload) => {
+          const newCredits = (payload.new as any).credits_available;
+          if (typeof newCredits === "number") setLiveCredits(newCredits);
+        }
+      )
+      .subscribe();
 
-      if (error) throw error;
-      if (data?.error) {
-        toast({ title: "Error", description: data.error, variant: "destructive" });
-      } else {
-        setGeneratedSummary(data.summary.summary_text);
-        toast({ title: "Summary generated!", description: "Your AI summary is ready." });
-      }
-    } catch (err: any) {
-      toast({ title: "Generation failed", description: err.message || "Something went wrong", variant: "destructive" });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profile?.id]);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(generatedSummary);
-    toast({ title: "Copied to clipboard!" });
-  };
-
-  const timeAgo = (dateStr: string) => {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    return `${Math.floor(hrs / 24)}d ago`;
+  const handleCreditsUsed = () => {
+    setLiveCredits((prev) => Math.max(0, (prev ?? credits) - 1));
   };
 
   return (
@@ -173,94 +120,11 @@ export default function Dashboard() {
         {/* Content */}
         <div className="flex-1 p-6 overflow-y-auto">
           {activeTab === "generate" && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl mx-auto space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold mb-1">Generate Summary</h2>
-                <p className="text-sm text-muted-foreground">Paste a URL to get started</p>
-              </div>
-
-              <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
-                <Input
-                  placeholder="Paste YouTube, article, or blog URL..."
-                  value={contentUrl}
-                  onChange={(e) => setContentUrl(e.target.value)}
-                  className="h-12"
-                />
-                <div className="flex gap-3 items-end">
-                  <div className="flex-1">
-                    <label className="text-sm font-medium mb-1.5 block">Summary Format</label>
-                    <Select value={format} onValueChange={setFormat}>
-                      <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {summaryFormats.map((f) => (
-                          <SelectItem key={f} value={f}>{f}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button className="h-10 px-6 shadow-glow" onClick={handleGenerate} disabled={isGenerating || !contentUrl}>
-                    {isGenerating ? (
-                      <><Clock className="h-4 w-4 mr-2 animate-spin" /> Generating...</>
-                    ) : (
-                      <><Sparkles className="h-4 w-4 mr-2" /> Generate</>
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              {isGenerating && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-2xl border border-border p-8 bg-card text-center">
-                  <Sparkles className="h-10 w-10 text-primary mx-auto mb-4 animate-pulse" />
-                  <p className="text-muted-foreground">Processing with AI... This usually takes a few seconds.</p>
-                </motion.div>
-              )}
-
-              {generatedSummary && !isGenerating && (
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-border p-6 bg-card">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold">Your Summary</h3>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={handleCopy}><Copy className="h-3.5 w-3.5 mr-1" /> Copy</Button>
-                    </div>
-                  </div>
-                  <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap">
-                    {generatedSummary}
-                  </div>
-                </motion.div>
-              )}
-            </motion.div>
+            <GenerateTab profile={profile} onCreditsUsed={handleCreditsUsed} />
           )}
 
           {activeTab === "library" && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto">
-              <h2 className="text-2xl font-bold mb-6">My Library</h2>
-              {loadingLibrary ? (
-                <p className="text-muted-foreground">Loading...</p>
-              ) : summaries.length === 0 ? (
-                <p className="text-muted-foreground">No summaries yet. Generate your first one!</p>
-              ) : (
-                <div className="space-y-3">
-                  {summaries.map((s) => {
-                    const Icon = typeIcon[s.content_type] || Globe;
-                    return (
-                      <div key={s.id} className="rounded-xl border border-border p-4 bg-card flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer">
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <Icon className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{s.title || s.original_link}</p>
-                          <p className="text-xs text-muted-foreground">{s.summary_format} · {timeAgo(s.created_at)}</p>
-                        </div>
-                        <Button variant="ghost" size="sm" onClick={() => {
-                          navigator.clipboard.writeText(s.summary_text);
-                          toast({ title: "Copied!" });
-                        }}><Copy className="h-4 w-4" /></Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </motion.div>
+            <LibraryTab profile={profile} />
           )}
 
           {(activeTab === "analytics" || activeTab === "settings") && (
