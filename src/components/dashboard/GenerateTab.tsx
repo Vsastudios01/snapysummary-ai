@@ -13,18 +13,18 @@ import { useToast } from "@/hooks/use-toast";
 import SummaryOutput from "./SummaryOutput";
 
 const summaryFormats = [
-  "Quick Summary",
-  "Detailed Summary",
-  "Bullet Points",
-  "Study Mode",
-  "Mindmap Style",
-  "Twitter Thread",
-  "Review Questions",
-  "Audio Script",
-  "Personalized",
-  "Multi-Language",
-  "Visual Summary",
-  "Email Digest",
+  "Resumo Rápido",
+  "Resumo Detalhado",
+  "Tópicos",
+  "Modo Estudo",
+  "Mapa Mental",
+  "Thread Twitter",
+  "Questões de Revisão",
+  "Roteiro para Áudio",
+  "Personalizado",
+  "Multi-Idioma",
+  "Resumo Visual",
+  "Digest por E-mail",
 ];
 
 function detectContentType(url: string): string {
@@ -41,7 +41,7 @@ interface GenerateTabProps {
 export default function GenerateTab({ profile, onCreditsUsed }: GenerateTabProps) {
   const { toast } = useToast();
   const [contentUrl, setContentUrl] = useState("");
-  const [format, setFormat] = useState("Quick Summary");
+  const [format, setFormat] = useState("Resumo Rápido");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedSummary, setGeneratedSummary] = useState("");
   const [pdfFile, setPdfFile] = useState<File | null>(null);
@@ -54,13 +54,13 @@ export default function GenerateTab({ profile, onCreditsUsed }: GenerateTabProps
     const file = e.target.files?.[0];
     if (file && file.type === "application/pdf") {
       if (file.size > 20 * 1024 * 1024) {
-        toast({ title: "File too large", description: "Max 20MB", variant: "destructive" });
+        toast({ title: "Arquivo muito grande", description: "Máximo de 20MB", variant: "destructive" });
         return;
       }
       setPdfFile(file);
       setContentUrl("");
     } else {
-      toast({ title: "Invalid file", description: "Please select a PDF file", variant: "destructive" });
+      toast({ title: "Arquivo inválido", description: "Selecione um arquivo PDF", variant: "destructive" });
     }
   };
 
@@ -83,7 +83,6 @@ export default function GenerateTab({ profile, onCreditsUsed }: GenerateTabProps
       let body: any = { format };
 
       if (pdfFile) {
-        // Upload PDF to storage
         setUploading(true);
         const userId = profile.user_id;
         const filePath = `${userId}/${Date.now()}_${pdfFile.name}`;
@@ -109,11 +108,11 @@ export default function GenerateTab({ profile, onCreditsUsed }: GenerateTabProps
         if (data.error === "no_credits") {
           toast({
             title: "Sem créditos",
-            description: data.message || "Upgrade your plan!",
+            description: data.message || "Faça upgrade do seu plano!",
             variant: "destructive",
           });
         } else {
-          toast({ title: "Error", description: data.error, variant: "destructive" });
+          toast({ title: "Erro", description: data.error, variant: "destructive" });
         }
       } else {
         setGeneratedSummary(data.summary.summary_text);
@@ -135,14 +134,14 @@ export default function GenerateTab({ profile, onCreditsUsed }: GenerateTabProps
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-1">Generate Summary</h2>
-        <p className="text-sm text-muted-foreground">Paste a URL or upload a PDF to get started</p>
+        <h2 className="text-2xl font-bold mb-1">Gerar Resumo</h2>
+        <p className="text-sm text-muted-foreground">Cole uma URL ou envie um PDF para começar</p>
       </div>
 
       <div className="rounded-2xl border border-border p-6 bg-card space-y-4">
         {/* URL input */}
         <Input
-          placeholder="Paste YouTube, article, or blog URL..."
+          placeholder="Cole a URL do YouTube, artigo ou blog..."
           value={contentUrl}
           onChange={(e) => {
             setContentUrl(e.target.value);
@@ -168,7 +167,7 @@ export default function GenerateTab({ profile, onCreditsUsed }: GenerateTabProps
             disabled={isGenerating}
           >
             <Upload className="h-4 w-4 mr-2" />
-            {pdfFile ? "Change PDF" : "Upload PDF"}
+            {pdfFile ? "Trocar PDF" : "Enviar PDF"}
           </Button>
           {pdfFile && (
             <div className="flex items-center gap-2 text-sm bg-secondary rounded-lg px-3 py-1.5">
@@ -182,7 +181,7 @@ export default function GenerateTab({ profile, onCreditsUsed }: GenerateTabProps
 
         <div className="flex gap-3 items-end">
           <div className="flex-1">
-            <label className="text-sm font-medium mb-1.5 block">Summary Format</label>
+            <label className="text-sm font-medium mb-1.5 block">Formato do Resumo</label>
             <Select value={format} onValueChange={setFormat}>
               <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -198,9 +197,9 @@ export default function GenerateTab({ profile, onCreditsUsed }: GenerateTabProps
             disabled={isGenerating || (!contentUrl && !pdfFile)}
           >
             {isGenerating ? (
-              <><Clock className="h-4 w-4 mr-2 animate-spin" /> {uploading ? "Uploading..." : "Generating..."}</>
+              <><Clock className="h-4 w-4 mr-2 animate-spin" /> {uploading ? "Enviando..." : "Gerando..."}</>
             ) : (
-              <><Sparkles className="h-4 w-4 mr-2" /> Generate</>
+              <><Sparkles className="h-4 w-4 mr-2" /> Gerar</>
             )}
           </Button>
         </div>
@@ -210,7 +209,7 @@ export default function GenerateTab({ profile, onCreditsUsed }: GenerateTabProps
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-2xl border border-border p-8 bg-card text-center">
           <Sparkles className="h-10 w-10 text-primary mx-auto mb-4 animate-pulse" />
           <p className="text-muted-foreground">
-            {uploading ? "Uploading PDF..." : "Processing with AI... This usually takes a few seconds."}
+            {uploading ? "Enviando PDF..." : "Processando com IA... Isso geralmente leva alguns segundos."}
           </p>
         </motion.div>
       )}

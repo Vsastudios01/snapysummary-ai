@@ -34,7 +34,7 @@ export default function AuthPage() {
     });
     setGoogleLoading(false);
     if (error) {
-      toast({ title: "Google sign-in failed", description: String(error), variant: "destructive" });
+      toast({ title: "Falha ao entrar com Google", description: String(error), variant: "destructive" });
     }
   };
 
@@ -45,7 +45,7 @@ export default function AuthPage() {
     });
     setAppleLoading(false);
     if (error) {
-      toast({ title: "Apple sign-in failed", description: String(error), variant: "destructive" });
+      toast({ title: "Falha ao entrar com Apple", description: String(error), variant: "destructive" });
     }
   };
 
@@ -55,7 +55,7 @@ export default function AuthPage() {
     const { error } = await signIn(loginEmail, loginPassword);
     setLoading(false);
     if (error) {
-      toast({ title: "Login failed", description: error.message, variant: "destructive" });
+      toast({ title: "Falha no login", description: error.message, variant: "destructive" });
     } else {
       navigate("/dashboard");
     }
@@ -67,9 +67,9 @@ export default function AuthPage() {
     const { error } = await signUp(signupEmail, signupPassword, signupName);
     setLoading(false);
     if (error) {
-      toast({ title: "Signup failed", description: error.message, variant: "destructive" });
+      toast({ title: "Falha no cadastro", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Check your email", description: "We sent you a confirmation link to verify your account." });
+      toast({ title: "Verifique seu e-mail", description: "Enviamos um link de confirmação para verificar sua conta." });
     }
   };
 
@@ -78,13 +78,13 @@ export default function AuthPage() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6">
-            <ArrowLeft className="h-4 w-4" /> Back to home
+            <ArrowLeft className="h-4 w-4" /> Voltar ao início
           </Link>
           <div className="flex items-center justify-center gap-2 mb-2">
             <Zap className="h-7 w-7 text-primary" />
             <h1 className="text-2xl font-bold">Snapysummary</h1>
           </div>
-          <p className="text-muted-foreground text-sm">Join thousands learning faster with AI</p>
+          <p className="text-muted-foreground text-sm">Junte-se a milhares que aprendem mais rápido com IA</p>
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6 shadow-lg">
@@ -100,7 +100,7 @@ export default function AuthPage() {
               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
-            {googleLoading ? "Signing in..." : "Continue with Google"}
+            {googleLoading ? "Entrando..." : "Continuar com Google"}
           </Button>
 
           <Button
@@ -112,65 +112,65 @@ export default function AuthPage() {
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
               <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
             </svg>
-            {appleLoading ? "Signing in..." : "Continue with Apple"}
+            {appleLoading ? "Entrando..." : "Continuar com Apple"}
           </Button>
           <div className="relative mb-4">
             <Separator />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">or</span>
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">ou</span>
           </div>
 
           <Tabs defaultValue={defaultTab}>
             <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="login">Log In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsTrigger value="login">Entrar</TabsTrigger>
+              <TabsTrigger value="signup">Cadastrar</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
               <form className="space-y-4" onSubmit={handleLogin}>
                 <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
+                  <Label htmlFor="login-email">E-mail</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="login-email" type="email" placeholder="you@example.com" className="pl-9" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} required />
+                    <Input id="login-email" type="email" placeholder="voce@exemplo.com" className="pl-9" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} required />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="login-password">Password</Label>
+                  <Label htmlFor="login-password">Senha</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input id="login-password" type="password" placeholder="••••••••" className="pl-9" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} required />
                   </div>
                 </div>
-                <Button className="w-full" type="submit" disabled={loading}>{loading ? "Signing in..." : "Log In"}</Button>
+                <Button className="w-full" type="submit" disabled={loading}>{loading ? "Entrando..." : "Entrar"}</Button>
               </form>
             </TabsContent>
 
             <TabsContent value="signup">
               <form className="space-y-4" onSubmit={handleSignup}>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-name">Full Name</Label>
+                  <Label htmlFor="signup-name">Nome Completo</Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="signup-name" placeholder="Your name" className="pl-9" value={signupName} onChange={e => setSignupName(e.target.value)} required />
+                    <Input id="signup-name" placeholder="Seu nome" className="pl-9" value={signupName} onChange={e => setSignupName(e.target.value)} required />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                  <Label htmlFor="signup-email">E-mail</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="signup-email" type="email" placeholder="you@example.com" className="pl-9" value={signupEmail} onChange={e => setSignupEmail(e.target.value)} required />
+                    <Input id="signup-email" type="email" placeholder="voce@exemplo.com" className="pl-9" value={signupEmail} onChange={e => setSignupEmail(e.target.value)} required />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
+                  <Label htmlFor="signup-password">Senha</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input id="signup-password" type="password" placeholder="••••••••" className="pl-9" value={signupPassword} onChange={e => setSignupPassword(e.target.value)} required />
                   </div>
                 </div>
-                <Button className="w-full" type="submit" disabled={loading}>{loading ? "Creating account..." : "Create Account"}</Button>
+                <Button className="w-full" type="submit" disabled={loading}>{loading ? "Criando conta..." : "Criar Conta"}</Button>
                 <p className="text-xs text-center text-muted-foreground">
-                  By signing up, you agree to our <a href="#" className="underline">Terms</a> and <a href="#" className="underline">Privacy Policy</a>.
+                  Ao se cadastrar, você concorda com nossos <a href="#" className="underline">Termos</a> e <a href="#" className="underline">Política de Privacidade</a>.
                 </p>
               </form>
             </TabsContent>
