@@ -22,7 +22,7 @@ export default function SummaryOutput({ summary }: SummaryOutputProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "summary.md";
+    a.download = "resumo.md";
     a.click();
     URL.revokeObjectURL(url);
     toast({ title: "Download iniciado!" });
@@ -35,7 +35,7 @@ export default function SummaryOutput({ summary }: SummaryOutputProps) {
       } catch {}
     } else {
       navigator.clipboard.writeText(summary);
-      toast({ title: "Link copiado para compartilhar!" });
+      toast({ title: "Texto copiado para compartilhar!" });
     }
   };
 
@@ -60,16 +60,16 @@ export default function SummaryOutput({ summary }: SummaryOutputProps) {
       className="rounded-2xl border border-border p-6 bg-card"
     >
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold">Your Summary</h3>
+        <h3 className="font-semibold">Seu Resumo</h3>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleCopy}>
-            <Copy className="h-3.5 w-3.5 mr-1" /> Copy
+            <Copy className="h-3.5 w-3.5 mr-1" /> Copiar
           </Button>
           <Button variant="outline" size="sm" onClick={handleDownload}>
-            <Download className="h-3.5 w-3.5 mr-1" /> Download
+            <Download className="h-3.5 w-3.5 mr-1" /> Baixar
           </Button>
           <Button variant="outline" size="sm" onClick={handleShare}>
-            <Share2 className="h-3.5 w-3.5 mr-1" /> Share
+            <Share2 className="h-3.5 w-3.5 mr-1" /> Compartilhar
           </Button>
           <Button
             variant={isSpeaking ? "default" : "outline"}
@@ -77,9 +77,9 @@ export default function SummaryOutput({ summary }: SummaryOutputProps) {
             onClick={handleAudio}
           >
             {isSpeaking ? (
-              <><VolumeX className="h-3.5 w-3.5 mr-1" /> Stop</>
+              <><VolumeX className="h-3.5 w-3.5 mr-1" /> Parar</>
             ) : (
-              <><Volume2 className="h-3.5 w-3.5 mr-1" /> Listen</>
+              <><Volume2 className="h-3.5 w-3.5 mr-1" /> Ouvir</>
             )}
           </Button>
         </div>

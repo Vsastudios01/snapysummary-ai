@@ -6,61 +6,61 @@ import { useState } from "react";
 import heroImage from "@/assets/hero-illustration.png";
 
 const navLinks = [
-  { label: "Features", href: "#features" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "Testimonials", href: "#testimonials" },
+  { label: "Funcionalidades", href: "#features" },
+  { label: "Preços", href: "#pricing" },
+  { label: "Depoimentos", href: "#testimonials" },
 ];
 
 const features = [
-  { icon: Youtube, title: "YouTube Videos", desc: "Paste any YouTube link and get an instant AI summary of the full transcript." },
-  { icon: Globe, title: "Articles & Blogs", desc: "Summarize any web article in seconds. Just paste the URL." },
-  { icon: FileText, title: "PDF Documents", desc: "Upload PDFs and extract key insights with AI-powered analysis." },
-  { icon: Zap, title: "Multiple Formats", desc: "Get summaries as bullet points, study notes, mindmaps, or Twitter threads." },
+  { icon: Youtube, title: "Vídeos do YouTube", desc: "Cole qualquer link do YouTube e obtenha um resumo instantâneo com IA." },
+  { icon: Globe, title: "Artigos e Blogs", desc: "Resuma qualquer artigo da web em segundos. Basta colar a URL." },
+  { icon: FileText, title: "Documentos PDF", desc: "Envie PDFs e extraia insights com análise inteligente por IA." },
+  { icon: Zap, title: "Múltiplos Formatos", desc: "Resumos em tópicos, notas de estudo, mapas mentais ou threads do Twitter." },
 ];
 
 const plans = [
   {
-    name: "Free",
+    name: "Grátis",
     price: "R$0",
     period: "",
-    credits: "3 credits/day",
-    features: ["1 video/day", "1 PDF/day", "1 article/day", "3 summary formats"],
+    credits: "3 créditos/dia",
+    features: ["1 vídeo/dia", "1 PDF/dia", "1 artigo/dia", "3 formatos de resumo"],
     popular: false,
-    cta: "Start Free",
+    cta: "Começar Grátis",
   },
   {
     name: "Starter",
     price: "R$14",
-    period: ".90/mo",
-    credits: "10 credits/day",
-    features: ["2 videos/day", "2 PDFs/day", "2 articles/day", "6 summary formats", "Referral bonuses"],
+    period: ",90/mês",
+    credits: "10 créditos/dia",
+    features: ["2 vídeos/dia", "2 PDFs/dia", "2 artigos/dia", "6 formatos de resumo", "Bônus por indicação"],
     popular: false,
-    cta: "Get Started",
+    cta: "Começar Agora",
   },
   {
     name: "Pro",
     price: "R$29",
-    period: ".90/mo",
-    credits: "25 credits/day",
-    features: ["5 videos/day", "5 PDFs/day", "5 articles/day", "All 12 formats", "Priority AI", "Analytics dashboard"],
+    period: ",90/mês",
+    credits: "25 créditos/dia",
+    features: ["5 vídeos/dia", "5 PDFs/dia", "5 artigos/dia", "Todos os 12 formatos", "IA prioritária", "Painel de análises"],
     popular: true,
-    cta: "Go Pro",
+    cta: "Assinar Pro",
   },
   {
-    name: "Annual Pro",
+    name: "Pro Anual",
     price: "R$149",
-    period: "/year",
-    credits: "100 credits/day",
-    features: ["Unlimited content", "All features", "VIP support", "Affiliate program", "20% off add-ons"],
+    period: "/ano",
+    credits: "100 créditos/dia",
+    features: ["Conteúdo ilimitado", "Todas as funcionalidades", "Suporte VIP", "Programa de afiliados", "20% de desconto em extras"],
     popular: false,
-    cta: "Best Value",
+    cta: "Melhor Valor",
   },
 ];
 
 const testimonials = [
-  { name: "Lucas M.", role: "Student", text: "Economizei 10h por semana nos meus estudos! O modo estudo é incrível.", stars: 5 },
-  { name: "Ana C.", role: "Content Creator", text: "I summarize 20+ YouTube videos daily. Snapysummary is a game changer.", stars: 5 },
-  { name: "Pedro R.", role: "Entrepreneur", text: "Consigo acompanhar tendências de mercado em minutos. Vale cada centavo!", stars: 5 },
+  { name: "Lucas M.", role: "Estudante", text: "Economizei 10h por semana nos meus estudos! O modo estudo é incrível.", stars: 5 },
+  { name: "Ana C.", role: "Criadora de Conteúdo", text: "Resumo mais de 20 vídeos do YouTube por dia. O Snapysummary é revolucionário.", stars: 5 },
+  { name: "Pedro R.", role: "Empreendedor", text: "Consigo acompanhar tendências de mercado em minutos. Vale cada centavo!", stars: 5 },
 ];
 
 const fadeUp = {
@@ -92,8 +92,8 @@ export default function LandingPage() {
             ))}
           </div>
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" asChild><Link to="/auth">Log in</Link></Button>
-            <Button asChild><Link to="/auth?tab=signup">Start Free <ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
+            <Button variant="ghost" asChild><Link to="/auth">Entrar</Link></Button>
+            <Button asChild><Link to="/auth?tab=signup">Começar Grátis <ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
           </div>
           <button className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -107,8 +107,8 @@ export default function LandingPage() {
               </a>
             ))}
             <div className="flex gap-2 pt-2">
-              <Button variant="ghost" className="flex-1" asChild><Link to="/auth">Log in</Link></Button>
-              <Button className="flex-1" asChild><Link to="/auth?tab=signup">Start Free</Link></Button>
+              <Button variant="ghost" className="flex-1" asChild><Link to="/auth">Entrar</Link></Button>
+              <Button className="flex-1" asChild><Link to="/auth?tab=signup">Começar Grátis</Link></Button>
             </div>
           </motion.div>
         )}
@@ -119,30 +119,30 @@ export default function LandingPage() {
         <div className="container mx-auto px-4">
           <motion.div initial="hidden" animate="visible" variants={stagger} className="max-w-3xl mx-auto text-center">
             <motion.div variants={fadeUp} className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-6">
-              <Zap className="h-3.5 w-3.5" /> AI-Powered Summaries
+              <Zap className="h-3.5 w-3.5" /> Resumos com IA
             </motion.div>
             <motion.h1 variants={fadeUp} className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight mb-6">
-              Transform Hours of Content into{" "}
-              <span className="text-gradient">Minutes of Knowledge</span>
+              Transforme Horas de Conteúdo em{" "}
+              <span className="text-gradient">Minutos de Conhecimento</span>
             </motion.h1>
             <motion.p variants={fadeUp} className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-              Snapysummary uses powerful AI to instantly summarize YouTube videos, articles, and PDFs. Save time and learn faster.
+              O Snapysummary usa IA avançada para resumir instantaneamente vídeos do YouTube, artigos e PDFs. Economize tempo e aprenda mais rápido.
             </motion.p>
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" className="text-base px-8 shadow-glow" asChild>
-                <Link to="/auth?tab=signup">Try Free — No Card Required <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link to="/auth?tab=signup">Teste Grátis — Sem Cartão <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
               <Button size="lg" variant="outline" className="text-base px-8" asChild>
-                <a href="#features">See How It Works</a>
+                <a href="#features">Veja Como Funciona</a>
               </Button>
             </motion.div>
             <motion.p variants={fadeUp} className="text-sm text-muted-foreground mt-4">
-              10,000+ summaries generated · Loved by students & creators
+              10.000+ resumos gerados · Amado por estudantes e criadores
             </motion.p>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.8 }} className="mt-16 max-w-4xl mx-auto">
             <div className="rounded-2xl overflow-hidden shadow-lg border border-border">
-              <img src={heroImage} alt="Snapysummary AI summarization dashboard preview" className="w-full" />
+              <img src={heroImage} alt="Prévia do painel de resumos com IA do Snapysummary" className="w-full" />
             </div>
           </motion.div>
         </div>
@@ -153,10 +153,10 @@ export default function LandingPage() {
         <div className="container mx-auto px-4">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="text-center mb-16">
             <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-bold mb-4">
-              Everything You Need to Learn Faster
+              Tudo Que Você Precisa Para Aprender Mais Rápido
             </motion.h2>
             <motion.p variants={fadeUp} className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Summarize any content type in the format that works best for you.
+              Resuma qualquer tipo de conteúdo no formato que funciona melhor para você.
             </motion.p>
           </motion.div>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -178,10 +178,10 @@ export default function LandingPage() {
         <div className="container mx-auto px-4">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="text-center mb-16">
             <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-bold mb-4">
-              Simple, Transparent Pricing
+              Preços Simples e Transparentes
             </motion.h2>
             <motion.p variants={fadeUp} className="text-lg text-muted-foreground">
-              Start free. Upgrade when you need more power.
+              Comece grátis. Faça upgrade quando precisar de mais.
             </motion.p>
           </motion.div>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
@@ -193,7 +193,7 @@ export default function LandingPage() {
               >
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 gradient-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
-                    Most Popular
+                    Mais Popular
                   </div>
                 )}
                 <h3 className="text-lg font-semibold mb-1">{plan.name}</h3>
@@ -224,7 +224,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="text-center mb-16">
             <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-bold mb-4">
-              Loved by Thousands
+              Amado por Milhares
             </motion.h2>
           </motion.div>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
@@ -251,14 +251,14 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 text-center">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
             <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-bold mb-4">
-              Ready to Save Hours Every Week?
+              Pronto Para Economizar Horas Toda Semana?
             </motion.h2>
             <motion.p variants={fadeUp} className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
-              Join 10,000+ users who learn faster with Snapysummary. Start free today.
+              Junte-se a mais de 10.000 usuários que aprendem mais rápido com o Snapysummary. Comece grátis hoje.
             </motion.p>
             <motion.div variants={fadeUp}>
               <Button size="lg" className="text-base px-8 shadow-glow" asChild>
-                <Link to="/auth?tab=signup">Get Started Free <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link to="/auth?tab=signup">Começar Grátis <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
             </motion.div>
           </motion.div>
@@ -274,11 +274,11 @@ export default function LandingPage() {
               <span className="font-semibold">Snapysummary</span>
             </div>
             <div className="flex gap-6 text-sm text-muted-foreground">
-              <a href="#" className="hover:text-foreground transition-colors">Terms</a>
-              <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
-              <a href="#" className="hover:text-foreground transition-colors">Contact</a>
+              <a href="#" className="hover:text-foreground transition-colors">Termos</a>
+              <a href="#" className="hover:text-foreground transition-colors">Privacidade</a>
+              <a href="#" className="hover:text-foreground transition-colors">Contato</a>
             </div>
-            <p className="text-sm text-muted-foreground">© 2026 Snapysummary. All rights reserved.</p>
+            <p className="text-sm text-muted-foreground">© 2026 Snapysummary. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>

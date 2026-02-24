@@ -19,9 +19,9 @@ export default function Dashboard() {
 
   const credits = liveCredits ?? profile?.credits_available ?? 0;
   const maxCredits = profile?.plans?.credits_per_day ?? 3;
-  const userName = profile?.full_name || "User";
+  const userName = profile?.full_name || "Usuário";
 
-  // Realtime credit updates
+  // Atualização de créditos em tempo real
   useEffect(() => {
     if (!profile?.id) return;
 
@@ -63,10 +63,10 @@ export default function Dashboard() {
         </div>
         <nav className="flex-1 p-3 space-y-1">
           {[
-            { icon: Plus, label: "Generate", tab: "generate" },
-            { icon: Library, label: "My Library", tab: "library" },
-            { icon: BarChart3, label: "Analytics", tab: "analytics" },
-            { icon: Settings, label: "Settings", tab: "settings" },
+            { icon: Plus, label: "Gerar Resumo", tab: "generate" },
+            { icon: Library, label: "Minha Biblioteca", tab: "library" },
+            { icon: BarChart3, label: "Análises", tab: "analytics" },
+            { icon: Settings, label: "Configurações", tab: "settings" },
           ].map((item) => (
             <button
               key={item.tab}
@@ -84,7 +84,7 @@ export default function Dashboard() {
         </nav>
         <div className="p-3 border-t border-border">
           <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" onClick={signOut}>
-            <LogOut className="h-4 w-4" /> Log out
+            <LogOut className="h-4 w-4" /> Sair
           </Button>
         </div>
       </aside>
@@ -99,11 +99,11 @@ export default function Dashboard() {
               <span className="font-bold">Snapysummary</span>
             </div>
             <div className="hidden sm:flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Hello,</span>
+              <span className="text-muted-foreground">Olá,</span>
               <span className="font-semibold">{userName}</span>
               {profile?.streak_days > 0 && (
                 <span className="flex items-center gap-1 text-primary ml-2">
-                  <Flame className="h-4 w-4" /> {profile.streak_days} day streak
+                  <Flame className="h-4 w-4" /> {profile.streak_days} dias seguidos
                 </span>
               )}
             </div>
@@ -111,7 +111,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">{credits} credits left</span>
+              <span className="text-sm font-medium">{credits} créditos restantes</span>
               <Progress value={(credits / maxCredits) * 100} className="w-20 h-2" />
             </div>
           </div>
@@ -130,8 +130,8 @@ export default function Dashboard() {
           {(activeTab === "analytics" || activeTab === "settings") && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl mx-auto text-center py-20">
               <Sparkles className="h-12 w-12 text-primary mx-auto mb-4" />
-              <h2 className="text-2xl font-bold mb-2">Coming Soon</h2>
-              <p className="text-muted-foreground">This feature is coming soon.</p>
+              <h2 className="text-2xl font-bold mb-2">Em Breve</h2>
+              <p className="text-muted-foreground">Esta funcionalidade está sendo desenvolvida.</p>
             </motion.div>
           )}
         </div>
