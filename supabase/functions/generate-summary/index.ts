@@ -22,6 +22,47 @@ const formatPrompts: Record<string, string> = {
   "Digest por E-mail": "Format as a professional email digest with subject line, key highlights, and call-to-action links.",
 };
 
+function extractTextFromHtml(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .substring(0, 30000);
+}
+
+async function callAI(prompt: string): Promise<string> {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: "You are an expert content summarizer. Format your response in clean markdown." },
+        { role: "user", content: prompt },
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error("AI gateway error:", res.status, errText);
+    if (res.status === 429) throw new Error("rate_limit");
+    if (res.status === 402) throw new Error("payment_required");
+    throw new Error("AI generation failed");
+  }
+
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || "Summary could not be generated.";
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS")
     return new Response(null, { headers: corsHeaders });
@@ -41,10 +82,7 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
       return new Response(JSON.stringify({ error: "Invalid auth" }), {
         status: 401,
@@ -52,7 +90,6 @@ serve(async (req) => {
       });
     }
 
-    // Get profile with plan
     const { data: profile } = await supabase
       .from("profiles")
       .select("*, plans(*)")
@@ -68,14 +105,8 @@ serve(async (req) => {
 
     if (profile.credits_available <= 0) {
       return new Response(
-        JSON.stringify({
-          error: "no_credits",
-          message: "No credits remaining. Upgrade your plan!",
-        }),
-        {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        JSON.stringify({ error: "no_credits", message: "Sem créditos. Faça upgrade do seu plano!" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -83,19 +114,19 @@ serve(async (req) => {
     if ((!url && !pdf_path) || !format) {
       return new Response(
         JSON.stringify({ error: "URL/PDF and format are required" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Build content for Gemini
+    const lang = profile.preferred_language === "pt-BR"
+      ? "Respond in Portuguese (pt-BR)."
+      : "Respond in the same language as the content.";
+    const formatInstruction = formatPrompts[format] || "Provide a helpful summary.";
+
     let contentText = "";
     let title = "";
 
     if (pdf_path) {
-      // Download PDF from storage and extract text
       const { data: fileData, error: fileError } = await supabase.storage
         .from("pdfs")
         .download(pdf_path);
@@ -103,154 +134,54 @@ serve(async (req) => {
       if (fileError || !fileData) {
         return new Response(
           JSON.stringify({ error: "Failed to download PDF" }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      // Convert to base64 for Gemini multimodal
+      // Extract text from PDF bytes (basic text extraction)
       const arrayBuffer = await fileData.arrayBuffer();
       const bytes = new Uint8Array(arrayBuffer);
-      let binary = "";
-      const chunkSize = 8192;
-      for (let i = 0; i < bytes.length; i += chunkSize) {
-        binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+      let pdfText = "";
+      // Simple text extraction from PDF binary
+      const decoder = new TextDecoder("utf-8", { fatal: false });
+      const rawText = decoder.decode(bytes);
+      // Extract text between BT/ET blocks and parentheses
+      const textMatches = rawText.match(/\(([^)]+)\)/g);
+      if (textMatches) {
+        pdfText = textMatches.map(m => m.slice(1, -1)).join(" ").substring(0, 30000);
       }
-      const base64 = btoa(binary);
+
       title = pdf_path.split("/").pop() || "PDF Document";
 
-      // Use Gemini with inline PDF data
-      const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-      if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured");
+      const prompt = pdfText
+        ? `${formatInstruction} ${lang}\n\nSummarize this PDF document content:\n\n${pdfText}\n\nFormat your response in clean markdown.`
+        : `${formatInstruction} ${lang}\n\nThe PDF "${title}" could not be fully parsed. Please provide a general template summary based on the document title. Format your response in clean markdown.`;
 
-      const lang =
-        profile.preferred_language === "pt-BR"
-          ? "Respond in Portuguese (pt-BR)."
-          : "Respond in the same language as the content.";
-      const formatInstruction =
-        formatPrompts[format] || "Provide a helpful summary.";
+      contentText = await callAI(prompt);
 
-      const geminiRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    inlineData: {
-                      mimeType: "application/pdf",
-                      data: base64,
-                    },
-                  },
-                  {
-                    text: `${formatInstruction} ${lang}\n\nSummarize this PDF document. Format your response in clean markdown.`,
-                  },
-                ],
-              },
-            ],
-            generationConfig: { temperature: 0.7, maxOutputTokens: 4096 },
-          }),
-        }
-      );
-
-      if (!geminiRes.ok) {
-        const errBody = await geminiRes.text();
-        console.error("Gemini PDF error:", geminiRes.status, errBody);
-        if (geminiRes.status === 429)
-          return new Response(
-            JSON.stringify({ error: "Rate limit reached. Try again shortly." }),
-            {
-              status: 429,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
-        throw new Error("AI generation failed");
-      }
-
-      const geminiData = await geminiRes.json();
-      contentText =
-        geminiData.candidates?.[0]?.content?.parts?.[0]?.text ||
-        "Summary could not be generated.";
     } else if (url) {
       title = url.length > 60 ? url.substring(0, 60) + "..." : url;
-
-      // For YouTube or articles, try to fetch content
       let fetchedContent = "";
       const isYouTube = /youtube\.com|youtu\.be/i.test(url);
 
       if (!isYouTube) {
         try {
           const pageRes = await fetch(url, {
-            headers: {
-              "User-Agent":
-                "Mozilla/5.0 (compatible; Snapysummary/1.0; +https://snapysummary.com)",
-            },
+            headers: { "User-Agent": "Mozilla/5.0 (compatible; Snapysummary/1.0)" },
           });
           if (pageRes.ok) {
-            const html = await pageRes.text();
-            // Simple text extraction: remove tags
-            fetchedContent = html
-              .replace(/<script[\s\S]*?<\/script>/gi, "")
-              .replace(/<style[\s\S]*?<\/style>/gi, "")
-              .replace(/<[^>]+>/g, " ")
-              .replace(/\s+/g, " ")
-              .trim()
-              .substring(0, 30000); // Limit to ~30k chars
+            fetchedContent = extractTextFromHtml(await pageRes.text());
           }
         } catch (e) {
           console.log("Fetch failed, will summarize URL only:", e);
         }
       }
 
-      const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-      if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured");
-
-      const lang =
-        profile.preferred_language === "pt-BR"
-          ? "Respond in Portuguese (pt-BR)."
-          : "Respond in the same language as the content.";
-      const formatInstruction =
-        formatPrompts[format] || "Provide a helpful summary.";
-
-      const userMessage = fetchedContent
+      const prompt = fetchedContent
         ? `${formatInstruction} ${lang}\n\nSummarize this content:\n\nURL: ${url}\n\nExtracted content:\n${fetchedContent}\n\nFormat your response in clean markdown.`
-        : `${formatInstruction} ${lang}\n\nSummarize this content from the URL: ${url}\n\nFormat your response in clean markdown.`;
+        : `${formatInstruction} ${lang}\n\nSummarize the content from this URL: ${url}\n\nFormat your response in clean markdown.`;
 
-      const geminiRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: userMessage }] }],
-            generationConfig: { temperature: 0.7, maxOutputTokens: 4096 },
-          }),
-        }
-      );
-
-      if (!geminiRes.ok) {
-        const errBody = await geminiRes.text();
-        console.error("Gemini error:", geminiRes.status, errBody);
-        if (geminiRes.status === 429)
-          return new Response(
-            JSON.stringify({ error: "Rate limit reached. Try again shortly." }),
-            {
-              status: 429,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
-        throw new Error("AI generation failed");
-      }
-
-      const geminiData = await geminiRes.json();
-      contentText =
-        geminiData.candidates?.[0]?.content?.parts?.[0]?.text ||
-        "Summary could not be generated.";
+      contentText = await callAI(prompt);
     }
 
     // Save summary
@@ -281,14 +212,9 @@ serve(async (req) => {
     // Update streak
     const lastUsed = new Date(profile.updated_at);
     const now = new Date();
-    const diffDays = Math.floor(
-      (now.getTime() - lastUsed.getTime()) / 86400000
-    );
+    const diffDays = Math.floor((now.getTime() - lastUsed.getTime()) / 86400000);
     const newStreak = diffDays <= 1 ? profile.streak_days + 1 : 1;
-    await supabase
-      .from("profiles")
-      .update({ streak_days: newStreak })
-      .eq("id", profile.id);
+    await supabase.from("profiles").update({ streak_days: newStreak }).eq("id", profile.id);
 
     // Log usage
     await supabase.from("usage_logs").insert({
@@ -298,22 +224,16 @@ serve(async (req) => {
     });
 
     return new Response(
-      JSON.stringify({
-        summary,
-        credits_remaining: profile.credits_available - 1,
-      }),
+      JSON.stringify({ summary, credits_remaining: profile.credits_available - 1 }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
     console.error("generate-summary error:", e);
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    const status = msg === "rate_limit" ? 429 : msg === "payment_required" ? 402 : 500;
     return new Response(
-      JSON.stringify({
-        error: e instanceof Error ? e.message : "Unknown error",
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      JSON.stringify({ error: msg }),
+      { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
