@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { extractText, getDocumentProxy } from "https://esm.sh/unpdf@0.12.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,17 +10,17 @@ const corsHeaders = {
 
 const formatPrompts: Record<string, string> = {
   "Resumo Rápido": "Provide a concise 3-5 sentence summary in a short paragraph.",
-  "Resumo Detalhado": "Provide a comprehensive detailed summary with clear sections and headings.",
-  "Tópicos": "Summarize as clear bullet points with key takeaways.",
-  "Modo Estudo": "Create a structured study guide with key concepts, definitions, and flashcard-style Q&A pairs.",
-  "Mapa Mental": "Create a hierarchical outline/mindmap with main topics and subtopics using indentation.",
-  "Thread Twitter": "Convert into a viral Twitter thread format (numbered tweets, max 280 chars each).",
-  "Questões de Revisão": "Generate 10 quiz questions with answers based on the content. Use Q: and A: format.",
+  "Resumo Detalhado": "Provide a comprehensive detailed summary with clear sections and headings using markdown.",
+  "Tópicos": "Summarize as clear bullet points with key takeaways using markdown lists.",
+  "Modo Estudo": "Create a structured study guide with key concepts, definitions, and flashcard-style Q&A pairs. Use markdown headings and bold for emphasis.",
+  "Mapa Mental": "Create a hierarchical outline/mindmap with main topics and subtopics using markdown indentation and nested lists.",
+  "Thread Twitter": "Convert into a viral Twitter thread format (numbered tweets, max 280 chars each). Use **bold** for emphasis.",
+  "Questões de Revisão": "Generate 10 quiz questions with answers based on the content. Use **Q:** and **A:** format with markdown.",
   "Roteiro para Áudio": "Convert into a natural-sounding script optimized for text-to-speech reading aloud.",
-  "Personalizado": "Provide a tailored summary focusing on actionable insights and practical takeaways.",
-  "Multi-Idioma": "Translate and summarize the content in Portuguese (pt-BR).",
-  "Resumo Visual": "Describe the content as an infographic: sections with icons, stats, and visual hierarchy descriptions.",
-  "Digest por E-mail": "Format as a professional email digest with subject line, key highlights, and call-to-action links.",
+  "Personalizado": "Provide a tailored summary focusing on actionable insights and practical takeaways. Use markdown formatting.",
+  "Multi-Idioma": "Translate and summarize the content in Portuguese (pt-BR). Use markdown formatting.",
+  "Resumo Visual": "Describe the content as an infographic: sections with icons/emojis, stats, and visual hierarchy using markdown headings and lists.",
+  "Digest por E-mail": "Format as a professional email digest with subject line, key highlights, and call-to-action links. Use markdown.",
 };
 
 function extractTextFromHtml(html: string): string {
@@ -29,7 +30,46 @@ function extractTextFromHtml(html: string): string {
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim()
-    .substring(0, 30000);
+    .substring(0, 50000);
+}
+
+async function fetchYouTubeTranscript(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; Snapysummary/1.0)" },
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+
+    // Try to extract captions/transcript data from YouTube page
+    const captionMatch = html.match(/"captions":\s*(\{.*?"playerCaptionsTracklistRenderer".*?\})\s*,\s*"/s);
+    if (!captionMatch) return null;
+
+    // Extract caption track URL
+    const trackMatch = captionMatch[1].match(/"baseUrl"\s*:\s*"([^"]+)"/);
+    if (!trackMatch) return null;
+
+    let captionUrl = trackMatch[1].replace(/\\u0026/g, "&");
+    // Fetch the transcript XML
+    const captionRes = await fetch(captionUrl);
+    if (!captionRes.ok) return null;
+    const captionXml = await captionRes.text();
+
+    // Extract text from XML transcript
+    const textParts = captionXml.match(/<text[^>]*>([\s\S]*?)<\/text>/g);
+    if (!textParts || textParts.length === 0) return null;
+
+    const transcript = textParts
+      .map(t => t.replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#39;/g, "'").replace(/&quot;/g, '"'))
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    return transcript.length > 100 ? transcript.substring(0, 50000) : null;
+  } catch (e) {
+    console.log("YouTube transcript extraction failed:", e);
+    return null;
+  }
 }
 
 async function callAI(prompt: string): Promise<string> {
@@ -45,7 +85,10 @@ async function callAI(prompt: string): Promise<string> {
     body: JSON.stringify({
       model: "google/gemini-2.5-flash",
       messages: [
-        { role: "system", content: "You are an expert content summarizer. Format your response in clean markdown." },
+        {
+          role: "system",
+          content: "You are an expert content summarizer. Always respond in clean, well-structured Markdown. Use headings (##, ###), bold (**text**), bullet points, and numbered lists for clarity. Keep the structure consistent and professional.",
+        },
         { role: "user", content: prompt },
       ],
     }),
@@ -119,14 +162,15 @@ serve(async (req) => {
     }
 
     const lang = profile.preferred_language === "pt-BR"
-      ? "Respond in Portuguese (pt-BR)."
+      ? "Respond entirely in Portuguese (pt-BR)."
       : "Respond in the same language as the content.";
-    const formatInstruction = formatPrompts[format] || "Provide a helpful summary.";
+    const formatInstruction = formatPrompts[format] || "Provide a helpful summary in markdown format.";
 
     let contentText = "";
     let title = "";
 
     if (pdf_path) {
+      // ── PDF extraction using unpdf ──
       const { data: fileData, error: fileError } = await supabase.storage
         .from("pdfs")
         .download(pdf_path);
@@ -138,33 +182,53 @@ serve(async (req) => {
         );
       }
 
-      // Extract text from PDF bytes (basic text extraction)
-      const arrayBuffer = await fileData.arrayBuffer();
-      const bytes = new Uint8Array(arrayBuffer);
       let pdfText = "";
-      // Simple text extraction from PDF binary
-      const decoder = new TextDecoder("utf-8", { fatal: false });
-      const rawText = decoder.decode(bytes);
-      // Extract text between BT/ET blocks and parentheses
-      const textMatches = rawText.match(/\(([^)]+)\)/g);
-      if (textMatches) {
-        pdfText = textMatches.map(m => m.slice(1, -1)).join(" ").substring(0, 30000);
+      try {
+        const arrayBuffer = await fileData.arrayBuffer();
+        const pdf = await getDocumentProxy(new Uint8Array(arrayBuffer));
+        const { text } = await extractText(pdf, { mergePages: true });
+        pdfText = typeof text === "string" ? text.substring(0, 50000) : "";
+      } catch (pdfErr) {
+        console.error("PDF parsing error:", pdfErr);
+        // Fallback: basic text extraction
+        try {
+          const ab = await fileData.arrayBuffer();
+          const decoder = new TextDecoder("utf-8", { fatal: false });
+          const rawText = decoder.decode(new Uint8Array(ab));
+          const textMatches = rawText.match(/\(([^)]+)\)/g);
+          if (textMatches) {
+            pdfText = textMatches.map(m => m.slice(1, -1)).join(" ").substring(0, 50000);
+          }
+        } catch { /* ignore fallback errors */ }
       }
 
-      title = pdf_path.split("/").pop() || "PDF Document";
+      title = pdf_path.split("/").pop()?.replace(/^\d+_/, "") || "PDF Document";
 
-      const prompt = pdfText
-        ? `${formatInstruction} ${lang}\n\nSummarize this PDF document content:\n\n${pdfText}\n\nFormat your response in clean markdown.`
-        : `${formatInstruction} ${lang}\n\nThe PDF "${title}" could not be fully parsed. Please provide a general template summary based on the document title. Format your response in clean markdown.`;
+      const prompt = pdfText && pdfText.length > 50
+        ? `${formatInstruction}\n\n${lang}\n\nSummarize this PDF document titled "${title}":\n\n${pdfText}`
+        : `${formatInstruction}\n\n${lang}\n\nThe PDF "${title}" could not be fully parsed. Provide a general template summary based on the title.`;
 
       contentText = await callAI(prompt);
 
     } else if (url) {
       title = url.length > 60 ? url.substring(0, 60) + "..." : url;
-      let fetchedContent = "";
       const isYouTube = /youtube\.com|youtu\.be/i.test(url);
 
-      if (!isYouTube) {
+      if (isYouTube) {
+        // ── YouTube: try transcript first, then URL-based prompt ──
+        const transcript = await fetchYouTubeTranscript(url);
+
+        if (transcript) {
+          const prompt = `${formatInstruction}\n\n${lang}\n\nAnalyze and summarize this YouTube video based on its transcript.\n\nVideo URL: ${url}\n\nTranscript:\n${transcript}\n\nProvide a precise, well-structured summary. Do NOT invent information not present in the transcript.`;
+          contentText = await callAI(prompt);
+        } else {
+          // Fallback: URL-only prompt
+          const prompt = `${formatInstruction}\n\n${lang}\n\nAnalyze and precisely summarize the content of this YouTube video: ${url}\n\nProvide a structured summary based on the video topic. If you cannot access the video, summarize what the video is likely about based on the URL and provide a note that the summary is based on limited information.`;
+          contentText = await callAI(prompt);
+        }
+      } else {
+        // ── Article/URL: fetch page content ──
+        let fetchedContent = "";
         try {
           const pageRes = await fetch(url, {
             headers: { "User-Agent": "Mozilla/5.0 (compatible; Snapysummary/1.0)" },
@@ -175,13 +239,13 @@ serve(async (req) => {
         } catch (e) {
           console.log("Fetch failed, will summarize URL only:", e);
         }
+
+        const prompt = fetchedContent && fetchedContent.length > 100
+          ? `${formatInstruction}\n\n${lang}\n\nSummarize this article:\n\nURL: ${url}\n\nContent:\n${fetchedContent}`
+          : `${formatInstruction}\n\n${lang}\n\nSummarize the content from this URL: ${url}`;
+
+        contentText = await callAI(prompt);
       }
-
-      const prompt = fetchedContent
-        ? `${formatInstruction} ${lang}\n\nSummarize this content:\n\nURL: ${url}\n\nExtracted content:\n${fetchedContent}\n\nFormat your response in clean markdown.`
-        : `${formatInstruction} ${lang}\n\nSummarize the content from this URL: ${url}\n\nFormat your response in clean markdown.`;
-
-      contentText = await callAI(prompt);
     }
 
     // Save summary
