@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import GenerateTab from "@/components/dashboard/GenerateTab";
 import LibraryTab from "@/components/dashboard/LibraryTab";
+import SettingsTab from "@/components/dashboard/SettingsTab";
 
 export default function Dashboard() {
   const { profile, signOut, user } = useAuth();
@@ -20,6 +21,13 @@ export default function Dashboard() {
   const credits = liveCredits ?? profile?.credits_available ?? 0;
   const maxCredits = profile?.plans?.credits_per_day ?? 3;
   const userName = profile?.full_name || "Usuário";
+
+  // Apply theme from profile
+  useEffect(() => {
+    if (profile?.theme) {
+      document.documentElement.classList.toggle("dark", profile.theme === "dark");
+    }
+  }, [profile?.theme]);
 
   // Atualização de créditos em tempo real
   useEffect(() => {
@@ -127,7 +135,11 @@ export default function Dashboard() {
             <LibraryTab profile={profile} />
           )}
 
-          {(activeTab === "analytics" || activeTab === "settings") && (
+          {activeTab === "settings" && (
+            <SettingsTab profile={profile} />
+          )}
+
+          {activeTab === "analytics" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl mx-auto text-center py-20">
               <Sparkles className="h-12 w-12 text-primary mx-auto mb-4" />
               <h2 className="text-2xl font-bold mb-2">Em Breve</h2>

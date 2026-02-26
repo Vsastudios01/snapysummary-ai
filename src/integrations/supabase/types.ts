@@ -64,9 +64,11 @@ export type Database = {
           credits_reset_at: string
           full_name: string | null
           id: string
+          notifications_enabled: boolean
           plan_id: string | null
           preferred_language: string | null
           streak_days: number
+          theme: string
           updated_at: string
           user_id: string
         }
@@ -77,9 +79,11 @@ export type Database = {
           credits_reset_at?: string
           full_name?: string | null
           id?: string
+          notifications_enabled?: boolean
           plan_id?: string | null
           preferred_language?: string | null
           streak_days?: number
+          theme?: string
           updated_at?: string
           user_id: string
         }
@@ -90,9 +94,11 @@ export type Database = {
           credits_reset_at?: string
           full_name?: string | null
           id?: string
+          notifications_enabled?: boolean
           plan_id?: string | null
           preferred_language?: string | null
           streak_days?: number
+          theme?: string
           updated_at?: string
           user_id?: string
         }
