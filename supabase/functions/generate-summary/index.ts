@@ -8,18 +8,18 @@ const corsHeaders = {
 };
 
 const formatPrompts: Record<string, string> = {
-  "Quick Summary": "Provide a concise 3-5 sentence summary in a short paragraph.",
-  "Detailed Summary": "Provide a comprehensive detailed summary with clear sections and headings.",
-  "Bullet Points": "Summarize as clear bullet points with key takeaways.",
-  "Study Mode": "Create a structured study guide with key concepts, definitions, and flashcard-style Q&A pairs.",
-  "Mindmap Style": "Create a hierarchical outline/mindmap with main topics and subtopics using indentation.",
-  "Twitter Thread": "Convert into a viral Twitter thread format (numbered tweets, max 280 chars each).",
-  "Review Questions": "Generate 10 quiz questions with answers based on the content. Use Q: and A: format.",
-  "Audio Script": "Convert into a natural-sounding script optimized for text-to-speech reading aloud.",
-  "Personalized": "Provide a tailored summary focusing on actionable insights and practical takeaways.",
-  "Multi-Language": "Translate and summarize the content in Portuguese (pt-BR).",
-  "Visual Summary": "Describe the content as an infographic: sections with icons, stats, and visual hierarchy descriptions.",
-  "Email Digest": "Format as a professional email digest with subject line, key highlights, and call-to-action links.",
+  "Resumo Rápido": "Provide a concise 3-5 sentence summary in a short paragraph.",
+  "Resumo Detalhado": "Provide a comprehensive detailed summary with clear sections and headings.",
+  "Tópicos": "Summarize as clear bullet points with key takeaways.",
+  "Modo Estudo": "Create a structured study guide with key concepts, definitions, and flashcard-style Q&A pairs.",
+  "Mapa Mental": "Create a hierarchical outline/mindmap with main topics and subtopics using indentation.",
+  "Thread Twitter": "Convert into a viral Twitter thread format (numbered tweets, max 280 chars each).",
+  "Questões de Revisão": "Generate 10 quiz questions with answers based on the content. Use Q: and A: format.",
+  "Roteiro para Áudio": "Convert into a natural-sounding script optimized for text-to-speech reading aloud.",
+  "Personalizado": "Provide a tailored summary focusing on actionable insights and practical takeaways.",
+  "Multi-Idioma": "Translate and summarize the content in Portuguese (pt-BR).",
+  "Resumo Visual": "Describe the content as an infographic: sections with icons, stats, and visual hierarchy descriptions.",
+  "Digest por E-mail": "Format as a professional email digest with subject line, key highlights, and call-to-action links.",
 };
 
 serve(async (req) => {

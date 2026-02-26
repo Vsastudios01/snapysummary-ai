@@ -85,7 +85,8 @@ export default function GenerateTab({ profile, onCreditsUsed }: GenerateTabProps
       if (pdfFile) {
         setUploading(true);
         const userId = profile.user_id;
-        const filePath = `${userId}/${Date.now()}_${pdfFile.name}`;
+        const safeName = pdfFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const filePath = `${userId}/${Date.now()}_${safeName}`;
 
         const { error: uploadError } = await supabase.storage
           .from("pdfs")
